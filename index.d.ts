@@ -7,6 +7,7 @@ export type AuthenticateAndroid = {
   subTitle?: string;
   description?: string;
   cancelButton?: string;
+  authenticator?: int;
   onAttempt?: (error: FingerprintScannerError) => void;
 };
 

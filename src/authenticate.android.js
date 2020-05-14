@@ -7,8 +7,8 @@ import createError from './createError';
 
 const { ReactNativeFingerprintScanner } = NativeModules;
 
-const authCurrent = (title, subTitle, description, cancelButton, resolve, reject) => {
-  ReactNativeFingerprintScanner.authenticate(title, subTitle, description, cancelButton)
+const authCurrent = (title, subTitle, description, cancelButton, authenticators, resolve, reject) => {
+  ReactNativeFingerprintScanner.authenticate(title, subTitle, description, cancelButton, authenticators)
     .then(() => {
       resolve(true);
     })
@@ -38,7 +38,7 @@ const authLegacy = (onAttempt, resolve, reject) => {
 
 const nullOnAttempt = () => null;
 
-export default ({ title, subTitle, description, cancelButton, onAttempt }) => {
+export default ({ title, subTitle, description, cancelButton, authenticators, onAttempt }) => {
   return new Promise((resolve, reject) => {
     if (!title) {
       title = description ? description : "Log In";
@@ -56,11 +56,16 @@ export default ({ title, subTitle, description, cancelButton, onAttempt }) => {
     if (!onAttempt) {
       onAttempt = nullOnAttempt;
     }
+    if (!authenticators) {
+      // defaunt: BIOMETRIC_WEAK
+      // see https://developer.android.com/reference/kotlin/android/hardware/biometrics/BiometricPrompt?hl=ko#authenticate for detail information.
+      authenticators = 255;
+    }
 
     if (Platform.Version < 23) {
       return authLegacy(onAttempt, resolve, reject);
     }
 
-    return authCurrent(title, subTitle, description, cancelButton, resolve, reject);
+    return authCurrent(title, subTitle, description, cancelButton, authenticators, resolve, reject);
   });
 }

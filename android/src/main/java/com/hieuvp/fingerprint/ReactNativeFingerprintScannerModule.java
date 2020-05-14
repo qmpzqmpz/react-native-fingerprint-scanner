@@ -191,7 +191,7 @@ public class ReactNativeFingerprintScannerModule
     }
 
     @ReactMethod
-    public void authenticate(String title, String subtitle, String description, String cancelButton, final Promise promise) {
+    public void authenticate(String title, String subtitle, String description, String cancelButton, int authenticators, final Promise promise) {
         if (requiresLegacyAuthentication()) {
             legacyAuthenticate(promise);
         }
@@ -203,7 +203,7 @@ public class ReactNativeFingerprintScannerModule
                 return;
             }
 
-            biometricAuthenticate(title, subtitle, description, cancelButton, promise);
+            biometricAuthenticate(title, subtitle, description, cancelButton, authenticators, promise);
         }
     }
 

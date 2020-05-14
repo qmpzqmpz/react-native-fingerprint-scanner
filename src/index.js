@@ -10,7 +10,7 @@ export default {
   authenticate,
   release,
   isSensorAvailable,
-  BIOMETRIC_STRING,
+  BIOMETRIC_STRONG,
   BIOMETRIC_WEAK,
   DEVICE_CREDENTIAL,
 };

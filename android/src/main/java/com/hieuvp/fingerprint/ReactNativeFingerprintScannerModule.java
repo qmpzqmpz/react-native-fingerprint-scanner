@@ -2,6 +2,7 @@ package com.hieuvp.fingerprint;
 
 import android.os.Build;
 import androidx.annotation.NonNull;
+import androidx.annotation.TargetApi;
 import androidx.biometric.BiometricPrompt;
 import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt.AuthenticationCallback;
@@ -26,6 +27,17 @@ import com.wei.android.lib.fingerprintidentify.FingerprintIdentify;
 import com.wei.android.lib.fingerprintidentify.base.BaseFingerprint.ExceptionListener;
 import com.wei.android.lib.fingerprintidentify.base.BaseFingerprint.IdentifyListener;
 
+import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyProperties;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.Key;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
 
 @ReactModule(name="ReactNativeFingerprintScanner")
 public class ReactNativeFingerprintScannerModule
@@ -35,6 +47,7 @@ public class ReactNativeFingerprintScannerModule
     public static final int MAX_AVAILABLE_TIMES = Integer.MAX_VALUE;
     public static final String TYPE_BIOMETRICS = "Biometrics";
     public static final String TYPE_FINGERPRINT_LEGACY = "Fingerprint";
+    private final String KEY_NAME = "BiometicsKey"
 
     private final ReactApplicationContext mReactContext;
     private BiometricPrompt biometricPrompt;
@@ -71,6 +84,31 @@ public class ReactNativeFingerprintScannerModule
 
     private boolean requiresLegacyAuthentication() {
         return currentAndroidVersion() < 23;
+    }
+
+    @TargetApi(23)
+    private SecretKey createKey() throws NoSuchProviderException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
+        String algorithm = KeyProperties.KEY_ALGORITHM_AES;
+        String provider = "AndroidKeyStore";
+        KeyGenerator keyGenerator = KeyGenerator.getInstance(algorithm, provider);
+        KeyGenParameterSpec keyGenParameterSpec = new KeyGenParameterSpec.Builder(KEY_NAME, KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT)
+                .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
+                .setUserAuthenticationRequired(true)
+                .build();
+
+        keyGenerator.init(keyGenParameterSpec);
+        return keyGenerator.generateKey();
+    }
+
+    @TargetApi(23)
+    private Cipher getEncryptCipher(Key key) throws NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException {
+        String algorithm = KeyProperties.KEY_ALGORITHM_AES;
+        String blockMode = KeyProperties.BLOCK_MODE_CBC;
+        String padding = KeyProperties.ENCRYPTION_PADDING_PKCS7;
+        Cipher cipher = Cipher.getInstance(algorithm+"/"+blockMode+"/"+padding);
+        cipher.init(Cipher.ENCRYPT_MODE, key);
+        return cipher;
     }
 
     public class AuthCallback extends BiometricPrompt.AuthenticationCallback {
@@ -129,10 +167,15 @@ public class ReactNativeFingerprintScannerModule
                         .setDescription(description)
                         .setSubtitle(subtitle)
                         .setTitle(title)
-                        .setAllowedAuthenticators(authenticators)
                         .build();
 
-                    bioPrompt.authenticate(promptInfo);
+		    // BIOMETRIC_STRONG or BIOMETRIC_STRONG | DEVICE_CREDENTIAL
+		    if (authenticators == 15 || authenticators == 32783) {
+                        BiometricPrompt.CryptoObject cryptoObject = new BiometricPrompt.CryptoObject(getEncryptCipher(createKey()));
+                        bioPrompt.authenticate(promptInfo, cryptoObject);
+                    } else {
+                        bioPrompt.authenticate(promptInfo);
+                    }
                 }
             });
 

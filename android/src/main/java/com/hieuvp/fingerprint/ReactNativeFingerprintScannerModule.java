@@ -171,8 +171,12 @@ public class ReactNativeFingerprintScannerModule
 
 		    // BIOMETRIC_STRONG or BIOMETRIC_STRONG | DEVICE_CREDENTIAL
 		    if (authenticators == 15 || authenticators == 32783) {
-                        BiometricPrompt.CryptoObject cryptoObject = new BiometricPrompt.CryptoObject(getEncryptCipher(createKey()));
-                        bioPrompt.authenticate(promptInfo, cryptoObject);
+		        try {
+                            BiometricPrompt.CryptoObject cryptoObject = new BiometricPrompt.CryptoObject(getEncryptCipher(createKey()));
+			    bioPrompt.authenticate(promptInfo, cryptoObject);
+		        } catch (Exception e) { 
+                            e.printStackTrace();
+		        }
                     } else {
                         bioPrompt.authenticate(promptInfo);
                     }

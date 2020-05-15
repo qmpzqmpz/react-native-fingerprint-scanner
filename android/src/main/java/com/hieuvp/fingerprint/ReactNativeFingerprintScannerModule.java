@@ -47,7 +47,7 @@ public class ReactNativeFingerprintScannerModule
     public static final int MAX_AVAILABLE_TIMES = Integer.MAX_VALUE;
     public static final String TYPE_BIOMETRICS = "Biometrics";
     public static final String TYPE_FINGERPRINT_LEGACY = "Fingerprint";
-    private final String KEY_NAME = "BiometicsKey"
+    private final String KEY_NAME = "BiometicsKey";
 
     private final ReactApplicationContext mReactContext;
     private BiometricPrompt biometricPrompt;

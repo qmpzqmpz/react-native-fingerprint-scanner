@@ -1,8 +1,8 @@
 package com.hieuvp.fingerprint;
 
 import android.os.Build;
+import android.annotation.TargetApi;
 import androidx.annotation.NonNull;
-import androidx.annotation.TargetApi;
 import androidx.biometric.BiometricPrompt;
 import androidx.biometric.BiometricManager;
 import androidx.biometric.BiometricPrompt.AuthenticationCallback;
